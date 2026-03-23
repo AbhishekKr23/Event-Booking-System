@@ -24,10 +24,12 @@ DROP TABLE IF EXISTS `attendance`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `attendance` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `booking_code` varchar(50) DEFAULT NULL,
+  `booking_code` varchar(50) NOT NULL,
   `entry_time` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `booking_code` (`booking_code`),
+  CONSTRAINT `fk_booking_code` FOREIGN KEY (`booking_code`) REFERENCES `bookings` (`booking_code`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -36,7 +38,7 @@ CREATE TABLE `attendance` (
 
 LOCK TABLES `attendance` WRITE;
 /*!40000 ALTER TABLE `attendance` DISABLE KEYS */;
-INSERT INTO `attendance` VALUES (1,'87a9c627-357b-40fa-a83c-35d2c4463af0','2026-03-23 16:02:01'),(2,'87a9c627-357b-40fa-a83c-35d2c4463af0','2026-03-23 16:43:11');
+INSERT INTO `attendance` VALUES (1,'87a9c627-357b-40fa-a83c-35d2c4463af0','2026-03-23 16:02:01'),(3,'feb3e44d-4e41-4d5c-b293-a08e7cd69f82','2026-03-23 18:44:03'),(4,'0976ef1d-0dd1-4d83-b111-9b16474c12d8','2026-03-23 18:45:47');
 /*!40000 ALTER TABLE `attendance` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -56,11 +58,11 @@ CREATE TABLE `bookings` (
   `tickets` int DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `booking_code` (`booking_code`),
-  KEY `user_id` (`user_id`),
-  KEY `event_id` (`event_id`),
-  CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `fk_user` (`user_id`),
+  KEY `fk_event` (`event_id`),
+  CONSTRAINT `fk_event` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -69,7 +71,7 @@ CREATE TABLE `bookings` (
 
 LOCK TABLES `bookings` WRITE;
 /*!40000 ALTER TABLE `bookings` DISABLE KEYS */;
-INSERT INTO `bookings` VALUES (1,1,1,'2026-03-23 15:43:56','87a9c627-357b-40fa-a83c-35d2c4463af0',2),(2,1,1,'2026-03-23 16:41:44','fe2ed7ac-3b01-4d63-bbf3-f8c2d7ae603f',1);
+INSERT INTO `bookings` VALUES (1,1,1,'2026-03-23 15:43:56','87a9c627-357b-40fa-a83c-35d2c4463af0',2),(2,1,1,'2026-03-23 16:41:44','fe2ed7ac-3b01-4d63-bbf3-f8c2d7ae603f',1),(4,1,3,'2026-03-23 18:34:45','1c36e817-bdcf-4721-83f5-093a3c0eb5f7',50),(5,1,1,'2026-03-23 18:42:44','feb3e44d-4e41-4d5c-b293-a08e7cd69f82',2),(6,1,3,'2026-03-23 18:45:13','0976ef1d-0dd1-4d83-b111-9b16474c12d8',5);
 /*!40000 ALTER TABLE `bookings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -82,13 +84,14 @@ DROP TABLE IF EXISTS `events`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `events` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `title` varchar(200) DEFAULT NULL,
+  `title` varchar(200) NOT NULL,
   `description` text,
-  `date` datetime DEFAULT NULL,
-  `total_capacity` int DEFAULT NULL,
-  `remaining_tickets` int DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `date` datetime NOT NULL,
+  `total_capacity` int NOT NULL,
+  `remaining_tickets` int NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `chk_tickets` CHECK ((`remaining_tickets` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -97,7 +100,7 @@ CREATE TABLE `events` (
 
 LOCK TABLES `events` WRITE;
 /*!40000 ALTER TABLE `events` DISABLE KEYS */;
-INSERT INTO `events` VALUES (1,'Music Show','Live Concert','2026-03-23 04:00:00',100,97),(2,'Test Event','Demo','2026-05-01 18:00:00',50,50);
+INSERT INTO `events` VALUES (1,'Music Show','Live Concert','2026-03-23 04:00:00',100,95),(2,'Test Event','Demo','2026-05-01 18:00:00',50,50),(3,'Test','test','2026-03-23 18:00:00',500,445);
 /*!40000 ALTER TABLE `events` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -110,8 +113,8 @@ DROP TABLE IF EXISTS `users`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -136,4 +139,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-03-23 17:09:03
+-- Dump completed on 2026-03-23 21:46:28

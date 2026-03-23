@@ -1,25 +1,35 @@
-const eventRoutes = require("./routes/eventRoutes");
-const { v4: uuidv4 } = require("uuid");
 const express = require("express");
 const db = require("./config/db");
+const { v4: uuidv4 } = require("uuid");
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 
 const app = express();
 app.use(express.json());
 
+// Swagger
 const swaggerDocument = YAML.load("./swagger.yaml");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use("/", eventRoutes);
 
 
+// ✅ GET all events
+app.get("/events", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM events WHERE date > NOW()"
+    );
+    res.status(200).json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// ✅ POST events (with validation)
+
+// ✅ POST create event
 app.post("/events", async (req, res) => {
   try {
     const { title, description, date, total_capacity } = req.body;
 
-    // 🔥 validation
     if (!title || !date || !total_capacity) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -29,18 +39,18 @@ app.post("/events", async (req, res) => {
       [title, description, date, total_capacity, total_capacity]
     );
 
-    res.json({ message: "Event created" });
+    res.status(201).json({ message: "Event created" });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 
-// ✅ POST bookings (with validation)
+// ✅ POST bookings (MAIN IMPORTANT API)
 app.post("/bookings", async (req, res) => {
   const { user_id, event_id, tickets } = req.body;
 
-  // 🔥 validation
   if (user_id == null || event_id == null || tickets == null) {
     return res.status(400).json({ error: "Missing fields" });
   }
@@ -54,6 +64,17 @@ app.post("/bookings", async (req, res) => {
   try {
     await conn.beginTransaction();
 
+    // ✅ check user exists
+    const [user] = await conn.query(
+      "SELECT id FROM users WHERE id=?",
+      [user_id]
+    );
+
+    if (user.length === 0) {
+      throw new Error("User not found");
+    }
+
+    // ✅ lock event row
     const [event] = await conn.query(
       "SELECT remaining_tickets FROM events WHERE id=? FOR UPDATE",
       [event_id]
@@ -69,11 +90,13 @@ app.post("/bookings", async (req, res) => {
 
     const code = uuidv4();
 
+    // ✅ insert booking
     await conn.query(
       "INSERT INTO bookings (user_id, event_id, booking_code, tickets) VALUES (?, ?, ?, ?)",
       [user_id, event_id, code, tickets]
     );
 
+    // ✅ update tickets
     await conn.query(
       "UPDATE events SET remaining_tickets = remaining_tickets - ? WHERE id=?",
       [tickets, event_id]
@@ -81,7 +104,10 @@ app.post("/bookings", async (req, res) => {
 
     await conn.commit();
 
-    res.json({ message: "Booking successful", booking_code: code });
+    res.status(201).json({
+      message: "Booking successful",
+      booking_code: code
+    });
 
   } catch (err) {
     await conn.rollback();
@@ -100,18 +126,17 @@ app.get("/users/:id/bookings", async (req, res) => {
       [req.params.id]
     );
 
-    res.json(rows);
+    res.status(200).json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 
-// ✅ POST attendance (with validation)
+// ✅ POST attendance
 app.post("/events/:id/attendance", async (req, res) => {
   const { code } = req.body;
 
-  // 🔥 validation
   if (!code) {
     return res.status(400).json({ error: "Code is required" });
   }
@@ -126,12 +151,20 @@ app.post("/events/:id/attendance", async (req, res) => {
       return res.status(404).json({ error: "Invalid code" });
     }
 
-    await db.query(
-      "INSERT INTO attendance (booking_code) VALUES (?)",
-      [code]
-    );
+    // ✅ prevent duplicate entry
+    try {
+      await db.query(
+        "INSERT INTO attendance (booking_code) VALUES (?)",
+        [code]
+      );
+    } catch (err) {
+      return res.status(400).json({ error: "Already checked in" });
+    }
 
-    res.json({ tickets: booking[0].tickets });
+    res.status(200).json({
+      message: "Entry recorded",
+      tickets: booking[0].tickets
+    });
 
   } catch (err) {
     res.status(500).json({ error: err.message });

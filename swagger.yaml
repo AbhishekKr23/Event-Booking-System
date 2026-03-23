@@ -4,12 +4,19 @@ info:
   version: 1.0.0
 
 paths:
+
   /events:
     get:
-      summary: Get all events
+      summary: Get all upcoming events
       responses:
-        200:
-          description: Success
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
 
     post:
       summary: Create a new event
@@ -19,6 +26,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [title, date, total_capacity]
               properties:
                 title:
                   type: string
@@ -29,8 +37,11 @@ paths:
                 total_capacity:
                   type: integer
       responses:
-        200:
+        '201':
           description: Event created
+        '400':
+          description: Bad request
+
 
   /bookings:
     post:
@@ -41,6 +52,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [user_id, event_id, tickets]
               properties:
                 user_id:
                   type: integer
@@ -49,12 +61,24 @@ paths:
                 tickets:
                   type: integer
       responses:
-        200:
+        '201':
           description: Booking successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  booking_code:
+                    type: string
+        '400':
+          description: Validation error
+
 
   /users/{id}/bookings:
     get:
-      summary: Get user bookings
+      summary: Get bookings of a user
       parameters:
         - name: id
           in: path
@@ -62,12 +86,13 @@ paths:
           schema:
             type: integer
       responses:
-        200:
-          description: Success
+        '200':
+          description: List of bookings
+
 
   /events/{id}/attendance:
     post:
-      summary: Mark attendance
+      summary: Mark attendance using booking code
       parameters:
         - name: id
           in: path
@@ -80,9 +105,14 @@ paths:
           application/json:
             schema:
               type: object
+              required: [code]
               properties:
                 code:
                   type: string
       responses:
-        200:
-          description: Tickets returned
+        '200':
+          description: Attendance recorded
+        '400':
+          description: Already checked in
+        '404':
+          description: Invalid code
