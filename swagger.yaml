@@ -1,0 +1,88 @@
+openapi: 3.0.0
+info:
+  title: Event Booking API
+  version: 1.0.0
+
+paths:
+  /events:
+    get:
+      summary: Get all events
+      responses:
+        200:
+          description: Success
+
+    post:
+      summary: Create a new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                date:
+                  type: string
+                total_capacity:
+                  type: integer
+      responses:
+        200:
+          description: Event created
+
+  /bookings:
+    post:
+      summary: Book tickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                event_id:
+                  type: integer
+                tickets:
+                  type: integer
+      responses:
+        200:
+          description: Booking successful
+
+  /users/{id}/bookings:
+    get:
+      summary: Get user bookings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Success
+
+  /events/{id}/attendance:
+    post:
+      summary: Mark attendance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+      responses:
+        200:
+          description: Tickets returned
