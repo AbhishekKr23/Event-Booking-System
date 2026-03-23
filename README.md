@@ -1,65 +1,128 @@
-# Event Booking System
+# 🎟️ Event Booking System
 
 ## 📌 Project Overview
-This is a mini event booking system where users can:
-- View events
-- Book tickets
-- Check bookings
-- Mark attendance
+
+This is a **Mini Event Booking System** built using **Node.js, Express, and MySQL**.
+Users can browse events, book tickets, view their bookings, and mark attendance.
 
 ---
 
-## ⚙️ Tech Stack
-- Node.js
-- Express.js
-- MySQL
-- Swagger (OpenAPI)
+## ✨ Features
+
+* View all available events
+* Book tickets with **transaction handling**
+* Generate **unique booking codes**
+* Check user bookings
+* Mark attendance using booking code
+* API documentation using **Swagger (OpenAPI)**
 
 ---
 
-## 🛢️ Database Setup
+## 🛠️ Tech Stack
 
-1. Open MySQL Workbench
-2. Create database:
-```sql
-CREATE DATABASE event_db;
-USE event_db;
+* **Node.js**
+* **Express.js**
+* **MySQL**
+* **Swagger (OpenAPI)**
+* **Postman**
 
+---
 
-🚀 Run the Project
+## ⚙️ Setup Instructions
 
-Install dependencies:
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/AbhishekKr23/Event-Booking-System.git
+cd Event-Booking-System
+```
+
+### 2. Install dependencies
+
+```bash
 npm install
+```
 
-Start server:
+### 3. Setup database
+
+* Open MySQL Workbench
+* Run the `event_db.sql` file
+
+### 4. Configure environment
+
+Create a `.env` file and add:
+
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=event_db
+```
+
+### 5. Start server
+
+```bash
 node app.js
+```
 
-Open in browser:
+### 6. Open in browser
+
+```bash
 http://localhost:3000/events
+```
 
+---
 
-📡 API Endpoints
-GET /events
-Get all events
+## 🔗 API Endpoints
 
-POST /events
-Create a new event
+| Method | Endpoint               | Description       |
+| ------ | ---------------------- | ----------------- |
+| GET    | /events                | Get all events    |
+| POST   | /events                | Create new event  |
+| POST   | /bookings              | Book tickets      |
+| GET    | /users/:id/bookings    | Get user bookings |
+| POST   | /events/:id/attendance | Mark attendance   |
 
-POST /bookings
-Book tickets
+---
 
-GET /users/:id/bookings
-Get user bookings
+## 📄 API Documentation
 
-POST /events/:id/attendance
-Mark attendance
+Swagger UI:
 
-
-📄 Swagger Docs
-Open:
+```
 http://localhost:3000/api-docs
+```
+
+---
+
+## 🧪 Testing
+
+* Use the **Postman collection** provided in the repository
+* Or test directly using Swagger UI
+
+---
+
+## 🗄️ Database Schema
+
+Tables included:
+
+* Users
+* Events
+* Bookings
+* Attendance
+
+All tables use **primary keys and foreign key constraints**.
+
+---
+
+## ⚡ Key Concepts Used
+
+* REST API design
+* MySQL relationships
+* Transaction handling (to avoid race conditions)
+* Input validation
+* Swagger API documentation
 
 
-🧪 Testing
-Use Postman to test all APIs.
+---
 
